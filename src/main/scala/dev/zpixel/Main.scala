@@ -2,18 +2,19 @@
  * Licensed under ENCRL-1.0 – Non-Commercial Research Use Only
  * See LICENSE file or https://github.com/zcomplex/zpixel.git
  */
-
 package dev.zpixel
+
+import dev.zpixel.generated.BuildInfo.{Name, Version}
 
 import java.awt.image.BufferedImage
 import java.awt.image.BufferedImage.TYPE_INT_RGB
 import java.io.File
 import javax.imageio.ImageIO
 
-type ZPixel = (l: String, r: Int, g: Int, b: Int)
+type ZRgb = (r: Int, g: Int, b: Int)
+type ZPixel = Int
 
-//case class ZFrameDim(width: Int, height: Int)
-case class ZFrame(width: Int, height: Int, pixels: Seq[Seq[ZPixel]])
+case class ZFrame(width: Int, height: Int, pixels: Seq[ZPixel])
 
 extension (s: String)
   def frameN: String = "\\d+".r
@@ -21,9 +22,45 @@ extension (s: String)
     .map(_.toString)
     .getOrElse("")
 
-private val outPath = "/data/dev/x-pixel/data/out/exp_1/zframes"
+extension (f: File)
+  def zframe: ZFrame =
+    val img    = ImageIO.read(f)
+    val (w, h) = (img.getWidth, img.getHeight)
+
+    val pixels = new Array[ZPixel](w * h)
+
+    // initializing pixels
+    pixels.indices foreach: i =>
+      // converting index to bidimensional coords
+      val (x, y) = (i % w, i / w)
+      // reading pixel rgb value at (x, y)
+      pixels(i) = img.getRGB(x, y)
+
+    ZFrame(w, h, pixels)
+
+extension (i: Int)
+  def rgb: ZRgb = (r = (i >> 16) & 0xFF, g = (i >> 8) & 0xFF, b = i & 0xFF)
+
+extension (rgb: ZRgb)
+  def int: Int = (rgb.r << 16) | (rgb.g << 8) | rgb.b
+
+extension (zpx: ZPixel)
+  def brightness: Int =
+    val rgb = zpx.rgb
+    (0.2126 * rgb.r + 0.7152 * rgb.g + 0.0722 * rgb.b).round.toInt
+
+private val outPath = "/data/dev/zpixel/data/out/exp_1/zframes"
 
 @main def run(): Unit =
+
+  val termCols = 80
+
+  val buildInfo = s"\u001b[1;97m$Name\u001b[0m $Version"
+  val buildFrame = (0 until termCols).map(_ => "=").mkString
+
+  println(buildInfo)
+  println(buildFrame)
+
   val folderPath = "/data/dev/zpixel/data/in/exp_1/frames"
   val pattern = "frame_\\d+\\.png".r
 
@@ -31,80 +68,55 @@ private val outPath = "/data/dev/x-pixel/data/out/exp_1/zframes"
     .listFiles
     .filter(f => f.isFile && pattern.matches(f.getName))
     .sortBy(_.getName)
+    .zipWithIndex
 
-  println(s"${files.length} frames found.")
+  println(s" * ${files.length} frames found.")
 
-  val frames = files map: file =>
+  if files.isEmpty then
+    println(" * no file to process")
+    sys.exit(0)
 
-    val img = ImageIO.read(file)
-    val width = img.getWidth
-    val height = img.getHeight
+  val (file0, _) = files.head
 
-    val pixels = (0 until height) map: y =>
+  val img = ImageIO.read(file0)
+  val (width, height) = (img.getWidth, img.getHeight)
 
-      val frameN = file.getName.frameN
+  // caching useful data
+  val iBuff = new BufferedImage(width, height, TYPE_INT_RGB)
+  val pbLen = 45 // progress bar length
+  
+  // processing frames
+  files.sliding(2) foreach:
+    case Array((aF, aI), (bF, bI)) =>
 
-//      print(s"frame: $frameN") // todo: compute number of fixed digits
-      print("reading...")
-//      Thread.sleep(2)
+      val perc = bI / (files.length.toDouble - 1)
+      val bars = (0 until pbLen)
+        .map:
+          case n if n <= (perc * pbLen) => "\u001b[1;33m\u2590\u001b[0m"
+          case _ => "\u001b[1;30m\u2590\u001b[0m"
+        .mkString
 
-      val pxs = (0 until width) map: x =>
+      print(f"\r\u001b[K * Processing $bars ${aI + 1}%06d-${bI + 1}%06d (${(perc * 100).ceil.toInt}%03d%%)")
+      val (frameL, frameR) = (aF.zframe, bF.zframe)
 
-        val rgb = img.getRGB(x, y)
+      // processing matrix
+      (0 until width * height) foreach: i =>
 
-        val r = (rgb >> 16) & 0xFF
-        val g = (rgb >> 8) & 0xFF
-        val b = rgb & 0xFF
+        // current pixel(s)
+        val (x, y) = (i % width, i / width)
+        val (pxL, pxR) = (frameL.pixels(i), frameR.pixels(i))
 
-//          println(s"($x, $y) = ($r, $g, $b)")
-//        println(s"${file.getName.frameN}:$y:$x")
-//        print("\r")//\u001b[K")
-        print(f"\r\u001b[Kframe: $frameN (\u001b[33m$y\u001b[0mx\u001b[33m$x\u001b[0m)")
+        val (rgbL, rgbR) = (pxL.rgb, pxR.rgb)
 
-//        Thread.sleep(1)
+        val rgb = (
+          r = math.abs(rgbL.r - rgbR.g),
+          g = math.abs(rgbL.g - rgbR.b),
+          b = math.abs(rgbL.b - rgbR.r)
+        )
 
-        (s"${file.getName.frameN}:$y:$x", r, g, b)
+        iBuff.setRGB(x, y, rgb.int)
 
-      println
-//      print("\r\u001b[K")
-      pxs
+      ImageIO.write(iBuff, "png", new File(outPath, f"zf_$aI%04d.png"))
+      iBuff.flush()
 
-    ZFrame(width, height, pixels)
-
-  println(s"frames: ${frames.length}")
-
-  // Sliding
-  val newFrames = frames.sliding(2) map:
-    case Array(a, b) =>
-
-      val pixels = (0 until a.height) map: y =>
-        (0 until a.width) map: x =>
-
-          val aPx = a.pixels(y)(x)
-          val bPx = b.pixels(y)(x)
-
-          (
-            l = "",
-            r = math.abs(bPx.r - aPx.r),
-            g = math.abs(bPx.g - aPx.g),
-            b = math.abs(bPx.b - aPx.b)
-          )
-
-      ZFrame(a.width, a.height, pixels)
-
-  // Drawing frames
-  newFrames.zipWithIndex.foreach:
-    case (frame, i) =>
-
-      val image = new BufferedImage(frame.width, frame.height, TYPE_INT_RGB)
-
-      (0 until frame.height) map: y =>
-        (0 until frame.width) map: x =>
-
-          val pixel = frame.pixels(y)(x)
-
-          val rgb = (pixel.r << 16) | (pixel.g << 8) | pixel.b
-
-          image.setRGB(x, y, rgb)
-
-      ImageIO.write(image, "png", new File(outPath, f"zf_$i%04d.png"))
+  println("\n * done.")
