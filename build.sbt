@@ -7,7 +7,7 @@ val scala3Version = "3.7.3"
 
 val major = 0
 val minor = 1
-val patch = 1
+val patch = 2
 
 val ver = s"$major.$minor.$patch"
 
@@ -19,7 +19,16 @@ lazy val root = project
 
     scalaVersion := scala3Version,
 
-    libraryDependencies += "org.scalameta" %% "munit" % "1.2.1" % Test,
+    libraryDependencies ++= Seq(
+      "org.scalameta" %% "munit" % "1.2.1" % Test,
+
+      // GPU, PyTorch library
+      "ai.djl"         % "api"                  % "0.35.0",
+      "ai.djl.pytorch" % "pytorch-engine"       % "0.35.0",
+      "ai.djl.pytorch" % "pytorch-native-cu121" % "2.3.1" classifier "linux-x86_64",
+
+      "org.slf4j" % "slf4j-simple" % "2.0.17"
+    ),
 
     Compile / sourceGenerators += Def.task {
       import java.util.Date
