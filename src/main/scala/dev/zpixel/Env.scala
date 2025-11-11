@@ -14,9 +14,9 @@ abstract class Env:
   lazy val experiment: String
 
   /** Input frames path. */
-  val iPath = s"/data/dev/zpixel/data/$experiment/in/frames"
+  val iPath = s"./data/$experiment/i/frames"
   /** Output frames path. */
-  val oPath = s"/data/dev/zpixel/data/$experiment/out/frames"
+  val oPath = s"./data/$experiment/o"
 
   private val iFramesPattern = "(f|frame)_\\d+\\.png".r
   private val progressBarLen = 45
