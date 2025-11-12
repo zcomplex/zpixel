@@ -1,14 +1,13 @@
-# Z-Pixel (draft)
+# Z-Pixel
 
-ZPixel is a research project which allows to experience though math tools like Fourier Transform the virtual holographic
+ZPixel is a research project which allows to experience through math tools like Fourier Transform the virtual holographic
 pixel that allows us to see more and beyond the physical boundaries. It's a journey, enjoy it :)
 
-[//]: # (![First tomography]&#40;docs/assets/tomography.jpg "Tomography example"&#41;)
-<p style="text-align:center;">
-  <img src="docs/assets/tomography.jpg" alt="First tomography" style="width:75%;max-width:480px;" title="Tomography example" />
+<p style="text-align:center">
+  <img src="docs/assets/tomography.jpg" alt="First tomography" style="margin:0 auto;width:75%;max-width:480px;" title="Tomography example" />
 </p>
 
-The above tomography comes from a video recorded with a simple webcam (`SPCA2650 PC Camera`) in front of a the white
+The above tomography comes from a video recorded with a simple webcam (`SPCA2650 PC Camera`) in front of the white
 wall, my hypothesis is that we can use the light as a fluid that contains in its ripples holographic information in which we can look
 and observe objects and environments that exist as radio emissions or manifestations that are related to other frequencies. It seems
 in fact that the light, our ultra sensible fluid, which is influenced by interior lighting frequencies and environmental
@@ -17,7 +16,6 @@ ravines of the universal hologram.
 
 Ok, now I am thinking to him :)
 
-[//]: # (![Daniel Jackson]&#40;docs/assets/daniel-jackson.jpg "Daniel Jackson"&#41;)
 <p style="text-align:center;">
   <img src="docs/assets/daniel-jackson.jpg" alt="Daniel Jackson" style="width:75%;max-width:480px;" title="Daniel Jackson" />
 </p>
