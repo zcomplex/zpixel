@@ -18,8 +18,8 @@ import scala.collection.mutable.ArrayBuffer
 /**
  * Simple program that performs a tomography, it takes in input recorded
  * video frames and computes the Fast Fourier Transform to obtain a representation
- * on the frequency of pixels value components and potentially studying underlying
- * matrix shapes and/or objects.
+ * on the frequency domain of pixels value components in order to potentially study
+ * underlying matrix shapes and/or objects.
  */
 object ZPixel extends Env with Renderer:
 
@@ -88,7 +88,7 @@ object ZPixel extends Env with Renderer:
 
     val data: NDArray = manager.create(flatData, Shape(frameSize, totFrames, 3))
 
-    // FFT 0-axis (time)
+    // spectral analysis, FFT 3-axis (rgb)
     val fftResult = data.fft(3) // complex64 result
 
     val meanData = fftResult
